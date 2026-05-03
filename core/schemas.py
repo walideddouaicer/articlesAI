@@ -42,6 +42,7 @@ class RetrievedContext(BaseModel):
     url: HttpUrl
     title: str
     relevant_text: str
+    timestamp: int
 
 class BriefingItem(BaseModel):
     title: str = Field(..., description="Short, punchy title for the news item")

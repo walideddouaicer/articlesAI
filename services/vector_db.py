@@ -129,3 +129,51 @@ async def upsert_article_to_vector_db(client: AsyncQdrantClient, article: Articl
         points=points
     )
     logger.info("upsert_complete", url=str(article.url), chunks=len(chunks))
+
+async def retrieve_recent_chunks(
+    client: AsyncQdrantClient, 
+    company_profile: CompanyProfile, 
+    days_back: int = 7
+) -> List[RetrievedContext]:
+    """
+    Retrieves and sorts recent relevant chunks from Qdrant.
+    """
+    from datetime import timedelta
+    
+    # 1. Embed query focus
+    query_vector = await embeddings.aembed_query(company_profile.core_focus)
+    
+    # 2. Time Math
+    cutoff = int((datetime.now() - timedelta(days=days_back)).timestamp())
+    
+    # 3. Search with Filter
+    results = await client.search(
+        collection_name=settings.QDRANT_COLLECTION,
+        query_vector=query_vector,
+        query_filter=models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="timestamp",
+                    range=models.Range(gte=cutoff)
+                )
+            ]
+        ),
+        limit=75,
+        score_threshold=0.70
+    )
+    
+    # 4. Map and Sort by Recency
+    retrieved = [
+        RetrievedContext(
+            url=r.payload["parent_url"],
+            title=r.payload.get("title", "Unknown"), # Title might need to be stored in payload
+            relevant_text=r.payload["text"],
+            timestamp=r.payload["timestamp"]
+        )
+        for r in results
+    ]
+    
+    # Sort chronologically (newest first)
+    retrieved.sort(key=lambda x: x.timestamp, reverse=True)
+    
+    return retrieved

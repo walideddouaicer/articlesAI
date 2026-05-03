@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     # App Settings
     PROJECT_NAME: str = "ArticlesAI"
     
+    # Slack Integration
+    SLACK_BOT_TOKEN: str
+    SLACK_CHANNEL_ID: str
+    
+    # Security
+    API_KEY: str
+    
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 settings = Settings()

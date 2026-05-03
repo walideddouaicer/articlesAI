@@ -9,7 +9,7 @@ crewai
 langchain-google-genai
 langfuse
 qdrant-client
-slack_bolt
+slack_sdk
 playwright
 crawl4ai
 structlog
